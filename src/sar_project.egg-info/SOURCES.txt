@@ -1,6 +1,8 @@
+README.md
 pyproject.toml
 src/sar_project.egg-info/PKG-INFO
 src/sar_project.egg-info/SOURCES.txt
 src/sar_project.egg-info/dependency_links.txt
 src/sar_project.egg-info/top_level.txt
+tests/test_operation_chief_agent.py
 tests/test_weather_agent.py

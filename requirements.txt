@@ -2,3 +2,6 @@ pyautogen
 python-dotenv
 pytest
 autogen
+
+google.generativeai
+markdown
