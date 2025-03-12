@@ -9,6 +9,7 @@ from typing import Dict, List, Any
 import uuid
 from sar_project.agents.base_agent import SARBaseAgent
 import google.generativeai as genai
+from tavily import TavilyClient
 
 from sar_project.knowledge.knowledge_base import KnowledgeBase
 
@@ -39,12 +40,20 @@ class OperationsSectionChiefAgent(SARBaseAgent):
         ]
 
     # The main function called to allow processing of the request
-    def process_request(self, message: str, incident_id: str, is_initial= True) -> List[Dict]:
+    def process_request(self, message: str, incident_id: str, location: str, is_initial= True) -> List[Dict]:
         """
         Main method to process incoming requests and generate team assignments
         """
+    
         try:
             
+            # Preprocess and Search using Tavily
+            tavily_data = self.searchRelevantInfo(message, incident_id, location)
+            if "weather" in tavily_data.keys():
+                message += f"weather_forecast {json.dumps(tavily_data["weather"])}"
+            if "terrain_info" in tavily_data.keys(): 
+                message += f"terrain_info {json.dumps(tavily_data["terrain_info"])}"
+
             # Process the operation
             prompt = self._generate_llm_prompt(incident_id, message, is_initial)
             llm_response = self._send_to_llm(prompt)
@@ -54,6 +63,39 @@ class OperationsSectionChiefAgent(SARBaseAgent):
             
         except Exception as e:
             raise Exception(f"Error processing SAR operation: {str(e)}")
+
+    # The function to preprocess the message using Tavily
+    def searchRelevantInfo(self, message: str, incident_id: str, location) -> Dict:
+        # Try using TAVILY API to get weather forecast and recommended search route
+        client = TavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
+        # extract the location from the message string
+        
+        
+        query1 = f"What is the weather forecast for {location} tomorrow?"
+        query2 = f"Find all trails/roads near {location} prioritizing open paths, avoiding steep terrain, and ensuring multiple search points are covered."
+        # Fetch weather details to predict conditions during the search
+        weather_response = client.search(
+            query=query1,
+            time_range="day",
+            include_answer="basic"
+        )
+        current_weather = {"description": weather_response["answer"], "results": json.dumps(weather_response["results"])}
+
+        # Fetch trail information to plan the search route
+        # Grabs images that we can use as well
+        route_response = client.search(
+            query=query2,
+            time_range="day",
+            include_images=True,
+            include_image_descriptions=True,
+            include_answer="basic"
+        )
+        current_route_info = {'description': route_response["answer"], "images": route_response["images"], "results": json.dumps(route_response["results"]) }
+        
+        self.kb.update_weather(location, current_weather, incident_id)
+        self.kb.update_terrain(location, current_route_info, incident_id)
+
+        return {"weather": current_weather, "terrain_info": current_route_info}
 
     # updating the knowledge base
     def _update_knowledge_base(self, incident_id: str, data: Dict) -> None:
@@ -73,6 +115,8 @@ class OperationsSectionChiefAgent(SARBaseAgent):
         if not is_initial:
             prev_info = self.kb.mission_history
             prev_info = list(filter(lambda item: "incident_id" in item and item["incident_id"] == incident_id, self.kb.mission_history))
+            # limit to just the last incident, to reduce size on updates?
+            prev_info = prev_info[-1] if len(prev_info) > 0 else {}
 
             return f"""
             You are an AI assistant for the Search and Rescue Operations Section Chief. Your role is to analyze incident information and generate tactical assignments for search, rescue, and medical teams.
@@ -153,6 +197,7 @@ class OperationsSectionChiefAgent(SARBaseAgent):
                     }},
                     "additional_information": "",
                     "priority_updates": []
+                    "route_images" : ["image1", "image2", "..."]
         }}, 
         "analysis": {{
             "severity_level": "HIGH|MEDIUM|LOW",

@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv
 import google.generativeai as genai
 from sar_project.agents.operation_chief_agent import OperationsSectionChiefAgent
+from tavily import TavilyClient
 
 load_dotenv()  # Load environment variables from .env file
 
@@ -10,9 +11,9 @@ load_dotenv()  # Load environment variables from .env file
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 
-def run_example(operations_chief, incident_id, initial_input, is_initial=True):
+def run_example(operations_chief, incident_id, initial_input, location = None, is_initial=True,):
     try:
-        operations_chief.process_request(initial_input, incident_id, is_initial)
+        operations_chief.process_request(initial_input, incident_id, is_initial, location)
     except Exception as e:
         print(f"Error: {str(e)}")
 
@@ -56,7 +57,7 @@ def example_01():
     Update: 6:00 AM – The search operation has resumed with improved weather conditions. The temperature is 38°F with light rain and fog. The teams are focusing on the upper section of the trail near the summit.
     """
 
-    return "test_id_01", [initial_input, update_1, update_2, update_3]
+    return "test_id_01", [initial_input, update_1, update_2, update_3], "Green Hollow Trail"
 
 def example_02():
     initial_input = """
@@ -67,7 +68,7 @@ def example_02():
     Teams: 2 search teams, 1 rescue team, 1 medical team
     Available Equipment: Radios, FPS Devices, First Aid Kits, 
     """
-    return "test_id_02", initial_input
+    return "test_id_02", initial_input, "Mount Baker Wilderness"
 
 def example_03():
     initial_input = """
@@ -79,24 +80,40 @@ def example_03():
     Available Equipment: Radios, GPS Devices, First Aid Kits, Emergency Supplies
     """
 
-    return "test_id_03", initial_input
+    return "test_id_03", initial_input, "Mount Hood National Forest"
+
+def example_04():
+    initial_input = """Location: Yosemite National Park  
+        Situation: 2 campers reported missing after flash flood  
+        Conditions: 75°F, winds 10 mph, visibility 1 mile, clear skies  
+        Status: Cell towers showing last signals from 1 sector  
+        Teams: Search team, Rescue team, Medical team  
+        Equipment: Radios, GPS Devices, First Aid Kits, Emergency Supplies  
+        Last Known Location: Latitude 37.8651, Longitude -119.5383  
+        """
+
+    return "test_id_04", initial_input, "Yosemite National Park"
+
 
 # Example usage
 if __name__ == "__main__":
     # Initialize the Operations Section Chief agent
     operations_chief = OperationsSectionChiefAgent()
     
-    id, input = example_02()
-    run_example(operations_chief, id, input)
+    id, input, loc = example_02()
+    run_example(operations_chief, id, input, loc)
 
-    id, input = example_03()
-    run_example(operations_chief, id, input)
+    id, input, loc = example_03()
+    run_example(operations_chief, id, input, loc)
 
-    id, inputs = example_01()
+    id, inputs, loc = example_01()
     run_example(operations_chief, id, inputs[0])
     for i in range(1, len(inputs)):
-        run_example(operations_chief, id, inputs[i], is_initial=False)
+        run_example(operations_chief, id, inputs[i], loc, is_initial=False, )
+
+    id, inputs, loc = example_04()
+    run_example(operations_chief, id, inputs, loc)
     
-    print(operations_chief.get_knowledge_base().mission_history)
+    # print(operations_chief.get_knowledge_base().mission_history)
 
 

@@ -1,6 +1,23 @@
 # Search and Rescue (SAR) Agent Framework - CSC 581
 
-## Role: Operation Chief Agent
+## Role: Operation Chief Agent (A3)
+
+### Insights
+
+- Information should be organized more cleanly instead of putting everything in mission history
+- We could benefit from more structured data and adding more to the knowledge base
+- Fix the syntax of markdown files and allow the option to generate markdown files or not
+
+### Modifications
+
+- Implemented Tavily to allow for searching for information
+- The goal here is that we can get real life weather and route planning info from the web
+- Ideally this can be fed to the LLM to help it generate plans based on this data
+- More information in terms of clickable links with map information in the reports.
+
+- Would be nice if we can verify what Tavily pulls up but so far the artifacts seem valid (maps on Yosemite, but also random images as well) I think playing with some of the parameters here/ using the extract feature from a web page could be beneficial...
+
+## Role: Operation Chief Agent (A1)
 
 - Create documents to send to search, rescue, and medical teams
 - Should be able to create documents for each update (still working on getting this to be better)
@@ -36,3 +53,105 @@ It might be helpful to delete the files in output_docs after a run so the number
 - I included in the prompt to leave unknown information on <> but there are some hallucinations. Some responses are more detailed than others. This may be due to the nature of LLMs and is quite hard to fix without additional formatting or knowledge bases to draw from. I also noticed that the results of the same response are different in terms of the docs created and information provided.
 - It would be nice to incorportate some GPS data or some type of update of what area has been searched so that we can include in any updates to leaders, more specific areas to target.
 - Overall, after creating this agent I think it would be helpful for creating formatted documents to be send out to search leaders with the information and the human leader can edit whatever info is necessary, but there should be some level of validation. The strength would be in the update documents if we can get them to reflect what teams are affected, so we can get these messages out quickly
+
+## Previous Instructions
+
+# Search and Rescue (SAR) Agent Framework - CSC 581
+
+## Introduction
+
+This framework is for CSC 581 students to develop intelligent agents supporting the AI4S&R project. Students can create specialized agents for various SAR roles such as those listed in this spreadsheet:
+
+https://docs.google.com/spreadsheets/d/1QZK5HAdDC-_XNui6S0JZTbJH5_PbYJTp8_gyhXmz8Ek/edit?usp=sharing
+https://docs.google.com/spreadsheets/d/11rBV9CbKNeQbWbaks8TF6GO7WcSUDS_-hAoH75UEkgQ/edit?usp=sharing
+
+Each student or team will choose a specific role within the SAR ecosystem and implement an agent that provides decision support and automation for that role.
+
+## How to Submit
+
+Please submit a link to your clone of the repository to Canvas.
+
+## Prerequisites
+
+- Python 3.8 or higher
+- pyenv (recommended for Python version management)
+- pip (for dependency management)
+
+## Setup and Installation
+
+1. Clone the repository:
+
+```bash
+git clone <repository-url>
+cd sar-project
+```
+
+2. Set up Python environment:
+
+```bash
+# Using pyenv (recommended)
+pyenv install 3.9.6  # or your preferred version
+pyenv local 3.9.6
+
+# Create and activate virtual environment
+python -m venv .venv
+source .venv/bin/activate  # On Unix/macOS
+# or
+.venv\Scripts\activate     # On Windows
+```
+
+3. Install dependencies:
+
+```bash
+pip install -r requirements.txt
+pip install -e .
+```
+
+4. Configure environment variables:
+
+#### OpenAI:
+
+- Obtain required API keys:
+  1. OpenAI API key: Sign up at https://platform.openai.com/signup
+- Update your `.env` file with the following:
+  ```
+  OPENAI_API_KEY=your_openai_api_key_here
+  ```
+
+#### Google Gemini:
+
+- Obtain required API keys:
+  1. `pip install google-generativeai`
+  2. `import google.generativeai as genai`
+  3. Google Gemini API Key: Obtain at https://aistudio.google.com/apikey
+- Configure with the following:
+  ```
+  genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+  ```
+
+Make sure to keep your `.env` file private and never commit it to version control.
+
+## Project Structure
+
+```
+sar-project/
+├── src/
+│   └── sar_project/         # Main package directory
+│       └── agents/          # Agent implementations
+│       └── config/          # Configuration and settings
+│       └── knowledge/       # Knowledge base implementations
+├── tests/                   # Test directory
+├── pyproject.toml           # Project metadata and build configuration
+├── requirements.txt         # Project dependencies
+└── .env                     # Environment configuration
+```
+
+## Development
+
+This project follows modern Python development practices:
+
+1. Source code is organized in the `src/sar_project` layout
+2. Use `pip install -e .` for development installation
+3. Run tests with `pytest tests/`
+4. Follow the existing code style and structure
+5. Make sure to update requirements.txt when adding dependencies

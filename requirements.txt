@@ -5,3 +5,5 @@ autogen
 
 google.generativeai
 markdown
+tavily-python
+openai

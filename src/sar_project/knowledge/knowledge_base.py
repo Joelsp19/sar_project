@@ -9,17 +9,19 @@ class KnowledgeBase:
         self.resource_status = {}
         self.mission_history = []
 
-    def update_terrain(self, location, data):
+    def update_terrain(self, location, data, incident_id):
         """
         Updates terrain data for a specific location.
 
         Args:
             location (str): Name or identifier of the location.
             data (dict): Terrain-related data (e.g., elevation, obstacles).
+            incident_id (str): Identifier of the incident.
         """
+        data["incident_id"] = incident_id
         self.terrain_data[location] = data
 
-    def update_weather(self, location, conditions):
+    def update_weather(self, location, conditions, incident_id):
         """
         Updates weather data for a specific location.
 
@@ -27,6 +29,7 @@ class KnowledgeBase:
             location (str): Name or identifier of the location.
             conditions (dict): Weather conditions (e.g., temperature, wind speed).
         """
+        conditions["incident_id"] = incident_id
         self.weather_data[location] = conditions
 
     def update_resource_status(self, resource_name, status):

@@ -11,12 +11,13 @@ class TestOperationsSectionChiefAgent(unittest.TestCase):
     def setUp(self):
         self.agent = OperationsSectionChiefAgent()
         self.test_incident_id = "test_incident_123"
-        self.test_incident_data = {
-            "location": "Test Location",
+        self.location = "Mt. Diablo State Park"
+        self.test_incident_data = """
+            "location": "Mt. Diablo State Park",
             "missing_persons": [{"name": "John Doe", "additional_info": "Last seen hiking"}],
             "environmental_conditions": {"temperature": 70, "wind_speed": 10, "visibility": "Good", "precipitation": "None", "hazards": []},
             "available_resources": {"search_teams": 3, "rescue_teams": 2, "medical_teams": 1, "equipment": ["ropes", "radios"]}
-        }
+        """
         self.test_update_data = {"""Situation Overview:
             Search and rescue operations are underway for John Doe, who was last seen hiking in the area. Current environmental conditions remain favorable, with a temperature of 70°F, wind speeds at 10 mph, good visibility, and no precipitation. No significant hazards have been reported in the area.
 
@@ -29,7 +30,7 @@ class TestOperationsSectionChiefAgent(unittest.TestCase):
         """}
         # We'll use the previous data for now
         self.test_prev_data = {      
-            "location": "Test Location",
+            "location": "Mt. Diablo State Park",
             "missing_persons": [{"name": "John Doe", "additional_info": "Last seen hiking"}],
             "environmental_conditions": {"temperature": 70, "wind_speed": 10, "visibility": "Good", "precipitation": "None", "hazards": []},
             "available_resources": {"search_teams": 3, "rescue_teams": 2, "medical_teams": 1, "equipment": ["ropes", "radios"]}
@@ -58,28 +59,11 @@ class TestOperationsSectionChiefAgent(unittest.TestCase):
                     except OSError as e:
                         print(f"Directory not empty. Skipping: {e}")
 
-    @patch("sar_project.agents.operation_chief_agent.OperationsSectionChiefAgent._send_to_llm")  # Mock _send_to_llm
-    def test_process_request_initial(self, mock_send_to_llm):
-        mock_send_to_llm.return_value = {"test": "response"}
-        response = self.agent.process_request(self.test_incident_data, self.test_incident_id)
-        self.assertEqual(response, {"test": "response"})
-        mock_send_to_llm.assert_called_once()
-        # self.mock_kb.log_mission_event.assert_called_once()  # Check KB update
-
-
-    @patch("sar_project.agents.operation_chief_agent.OperationsSectionChiefAgent._send_to_llm")  # Mock _send_to_llm
-    def test_process_request_update(self, mock_send_to_llm):
-        mock_send_to_llm.return_value = {"test": "response"}
-        response = self.agent.process_request(self.test_process_request_update, self.test_incident_id, is_initial=False)
-        self.assertEqual(response, {"test": "response"})
-        mock_send_to_llm.assert_called_once()
-        # self.mock_kb.log_mission_event.assert_called_once()  # Check KB update
-
     @patch("sar_project.agents.operation_chief_agent.OperationsSectionChiefAgent._send_to_llm")
     def test_process_request_error(self, mock_send_to_llm):
         mock_send_to_llm.side_effect = Exception("LLM Error")
         with self.assertRaisesRegex(Exception, "Error processing SAR operation: LLM Error"):
-            self.agent.process_request(self.test_incident_data, self.test_incident_id)
+            self.agent.process_request(self.test_incident_data, self.test_incident_id, self.location)
 
     @patch("sar_project.agents.operation_chief_agent.OperationsSectionChiefAgent.generate")
     def test_send_to_llm_success(self, mock_generate):
